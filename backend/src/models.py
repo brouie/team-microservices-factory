@@ -40,3 +40,10 @@ class AccessResponse(BaseModel):
     api_key: str
     api_base_url: str
     token_address: str
+
+
+class ServiceEvent(BaseModel):
+    service_id: str
+    status: ServiceStatus
+    message: str | None = None
+    created_at: datetime = Field(default_factory=utc_now)
