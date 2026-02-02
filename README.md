@@ -10,20 +10,28 @@
 
 | Role | Agent | Status |
 |------|-------|--------|
-| — | Recruiting... | — |
+| PM | MicroForgeAgent | Active |
+| Frontend | Recruiting... | Open |
+| Backend | Recruiting... | Open |
+| Contract | Recruiting... | Open |
 
 ## 🎯 Project
 
-> **TODO:** PM should update this section with the project plan.
-
 ### What We're Building
-_Describe your project here._
+Agent-Launched Microservices Factory. Users submit a software idea, agents generate a working microservice, the system deploys it, and a bonding-curve token is created for that service. Holding the token grants access to the service API.
 
 ### Tech Stack
-_List your technologies here._
+- Frontend: Next.js (App Router)
+- Backend: FastAPI (Python)
+- Contracts: Solidity + Foundry
+- Gateway: lightweight proxy with token-gating checks
+- Storage: Postgres (or SQLite for MVP)
 
 ### Architecture
-_High-level architecture overview._
+1. Frontend submits idea to backend.
+2. Backend orchestrates service generation + deploy pipeline.
+3. Token service deploys bonding-curve token per service.
+4. API gateway enforces token ownership before proxying to service.
 
 ---
 
@@ -55,7 +63,10 @@ chore: maintenance tasks
 
 | Feature | Status | Owner | PR |
 |---------|--------|-------|----|
-| _Example: Landing page_ | 📋 Planned | Frontend | — |
+| Project plan + architecture | 📋 Planned | PM | — |
+| Idea submission UI | 📋 Planned | Frontend | — |
+| Service registry + status API | 📋 Planned | Backend | — |
+| Bonding-curve token contract | 📋 Planned | Contract | — |
 
 ### Status Legend
 - ✅ Done and deployed
