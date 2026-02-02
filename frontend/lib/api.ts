@@ -80,3 +80,36 @@ export async function fetchServiceEvents(
   }
   return response.json();
 }
+
+export type Stats = {
+  total_services: number;
+  status_counts: Record<string, number>;
+  deployed_count: number;
+  tokenized_count: number;
+};
+
+export async function fetchStats(): Promise<Stats> {
+  const response = await fetch(`${API_BASE}/stats`);
+  if (!response.ok) {
+    throw new Error("Failed to load stats");
+  }
+  return response.json();
+}
+
+const GATEWAY_BASE = process.env.NEXT_PUBLIC_GATEWAY_BASE ?? "http://localhost:9000";
+
+export async function proxyServiceRequest(
+  serviceId: string,
+  path: string,
+  walletAddress: string,
+  options?: RequestInit
+): Promise<Response> {
+  const response = await fetch(`${GATEWAY_BASE}/proxy/${serviceId}/${path}`, {
+    ...options,
+    headers: {
+      ...options?.headers,
+      "X-Wallet-Address": walletAddress
+    }
+  });
+  return response;
+}

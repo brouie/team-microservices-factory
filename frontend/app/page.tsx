@@ -8,14 +8,18 @@ import {
   deployService,
   fetchServiceEvents,
   fetchServices,
+  fetchStats,
   ServiceEvent,
   ServiceRecord,
+  Stats,
   submitIdea
 } from "../lib/api";
 
 export default function Home() {
   const [idea, setIdea] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
   const [services, setServices] = useState<ServiceRecord[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [accessInfo, setAccessInfo] = useState<string | null>(null);
@@ -28,8 +32,14 @@ export default function Home() {
     setServices(data);
   };
 
+  const loadStats = async () => {
+    const data = await fetchStats();
+    setStats(data);
+  };
+
   useEffect(() => {
     loadServices().catch((error) => setMessage(error.message));
+    loadStats().catch(() => {});
   }, []);
 
   const handleRefresh = async () => {
@@ -37,6 +47,7 @@ export default function Home() {
     setMessage("");
     try {
       await loadServices();
+      await loadStats();
     } catch (error) {
       setMessage((error as Error).message);
     } finally {
@@ -52,6 +63,7 @@ export default function Home() {
       await submitIdea(idea);
       setIdea("");
       await loadServices();
+      await loadStats();
     } catch (error) {
       setMessage((error as Error).message);
     } finally {
@@ -66,6 +78,7 @@ export default function Home() {
     try {
       await deployService(serviceId);
       await loadServices();
+      await loadStats();
     } catch (error) {
       setMessage((error as Error).message);
     } finally {
@@ -80,6 +93,7 @@ export default function Home() {
     try {
       await createToken(serviceId);
       await loadServices();
+      await loadStats();
     } catch (error) {
       setMessage((error as Error).message);
     } finally {
@@ -121,8 +135,29 @@ export default function Home() {
       timeStyle: "short"
     });
 
+  const isValidWallet = walletAddress.startsWith("0x") && walletAddress.length === 42;
+
   return (
     <div className="grid">
+      <section className="panel">
+        <h2>Wallet Connection</h2>
+        <label htmlFor="wallet">Your Wallet Address</label>
+        <input
+          id="wallet"
+          type="text"
+          value={walletAddress}
+          onChange={(event) => setWalletAddress(event.target.value)}
+          placeholder="0x..."
+          className={isValidWallet ? "valid" : ""}
+        />
+        {walletAddress && !isValidWallet && (
+          <p className="muted error">Enter a valid Ethereum address (0x...)</p>
+        )}
+        {isValidWallet && (
+          <p className="muted success">Wallet connected</p>
+        )}
+      </section>
+
       <section className="panel">
         <h2>Submit Idea</h2>
         <label htmlFor="idea">Describe the microservice</label>
@@ -142,6 +177,30 @@ export default function Home() {
         </button>
         {message ? <p className="muted">{message}</p> : null}
       </section>
+
+      {stats && (
+        <section className="panel stats-panel">
+          <h2>Platform Stats</h2>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <span className="stat-value">{stats.total_services}</span>
+              <span className="stat-label">Total Services</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{stats.deployed_count}</span>
+              <span className="stat-label">Deployed</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{stats.tokenized_count}</span>
+              <span className="stat-label">Tokenized</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{stats.status_counts.queued || 0}</span>
+              <span className="stat-label">Queued</span>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="panel">
         <h2>Services</h2>
@@ -175,34 +234,36 @@ export default function Home() {
                     <p className="muted">
                       API: {service.api_base_url ?? "Not deployed"}
                     </p>
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={() => handleDeploy(service.id)}
-                    >
-                      Deploy
-                    </button>
-                    <button
-                      type="button"
-                      disabled={loading || !hasApi}
-                      onClick={() => handleToken(service.id)}
-                    >
-                      Create Token
-                    </button>
-                    <button
-                      type="button"
-                      disabled={loading || !hasApi || !hasToken}
-                      onClick={() => handleAccess(service.id)}
-                    >
-                      Get Access
-                    </button>
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={() => handleLoadEvents(service.id)}
-                    >
-                      Load Events
-                    </button>
+                    <div className="button-group">
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => handleDeploy(service.id)}
+                      >
+                        Deploy
+                      </button>
+                      <button
+                        type="button"
+                        disabled={loading || !hasApi}
+                        onClick={() => handleToken(service.id)}
+                      >
+                        Create Token
+                      </button>
+                      <button
+                        type="button"
+                        disabled={loading || !hasApi || !hasToken}
+                        onClick={() => handleAccess(service.id)}
+                      >
+                        Get Access
+                      </button>
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => handleLoadEvents(service.id)}
+                      >
+                        Load Events
+                      </button>
+                    </div>
                     {events ? (
                       <ul className="event-list">
                         {events.map((event, index) => (
