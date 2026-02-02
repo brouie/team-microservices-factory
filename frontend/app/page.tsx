@@ -16,6 +16,7 @@ export default function Home() {
   const [services, setServices] = useState<ServiceRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [accessInfo, setAccessInfo] = useState<string | null>(null);
 
   const loadServices = async () => {
     const data = await fetchServices();
@@ -41,6 +42,7 @@ export default function Home() {
   const handleSubmit = async () => {
     setLoading(true);
     setMessage("");
+    setAccessInfo(null);
     try {
       await submitIdea(idea);
       setIdea("");
@@ -55,6 +57,7 @@ export default function Home() {
   const handleDeploy = async (serviceId: string) => {
     setLoading(true);
     setMessage("");
+    setAccessInfo(null);
     try {
       await deployService(serviceId);
       await loadServices();
@@ -68,6 +71,7 @@ export default function Home() {
   const handleToken = async (serviceId: string) => {
     setLoading(true);
     setMessage("");
+    setAccessInfo(null);
     try {
       await createToken(serviceId);
       await loadServices();
@@ -83,8 +87,8 @@ export default function Home() {
     setMessage("");
     try {
       const access = await createAccess(serviceId);
-      setMessage(
-        `API base: ${access.api_base_url} | Token: ${access.token_address} | API key: ${access.api_key}`
+      setAccessInfo(
+        `API base: ${access.api_base_url}\nToken: ${access.token_address}\nAPI key: ${access.api_key}`
       );
     } catch (error) {
       setMessage((error as Error).message);
@@ -92,6 +96,12 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  const formatDate = (value: string) =>
+    new Date(value).toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short"
+    });
 
   return (
     <div className="grid">
@@ -120,6 +130,7 @@ export default function Home() {
         <button type="button" disabled={loading} onClick={handleRefresh}>
           Refresh
         </button>
+        {accessInfo ? <pre className="code-block">{accessInfo}</pre> : null}
         {services.length === 0 ? (
           <p className="muted">No services yet.</p>
         ) : (
@@ -131,6 +142,13 @@ export default function Home() {
                 return (
                   <>
                     <p>{service.idea}</p>
+                    <p className="muted">Service ID: {service.id}</p>
+                    <p className="muted">
+                      Created: {formatDate(service.created_at)}
+                    </p>
+                    <p className="muted">
+                      Updated: {formatDate(service.updated_at)}
+                    </p>
                     <p className="muted">Status: {service.status}</p>
                     <p className="muted">
                       Token: {service.token_address ?? "Not created"}
