@@ -18,3 +18,4 @@ Planned stack: Solidity + Foundry.
    - `RPC_URL` (Base RPC)
 3. Run script:
    - `forge script script/CreateToken.s.sol:CreateToken --rpc-url $RPC_URL --broadcast`
+   - PowerShell: `./scripts/deploy_token.ps1 -RpcUrl $RPC_URL -PrivateKey $PRIVATE_KEY`
