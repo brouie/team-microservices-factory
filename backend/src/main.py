@@ -29,7 +29,11 @@ def root() -> dict[str, str]:
 
 @app.post("/ideas", response_model=ServiceRecord)
 def submit_idea(payload: IdeaSubmission) -> ServiceRecord:
-    return store.create_service(payload.idea)
+    return store.create_service(
+        payload.idea,
+        requester_id=payload.requester_id,
+        metadata=payload.metadata,
+    )
 
 
 @app.get("/services", response_model=list[ServiceRecord])

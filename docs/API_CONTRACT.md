@@ -54,6 +54,8 @@ Base URL: `/`
 {
   "id": "string",
   "idea": "string",
+  "requester_id": "string|null",
+  "metadata": "object|null",
   "status": "queued|deploying|deployed|failed",
   "token_address": "string|null",
   "api_base_url": "string|null",
