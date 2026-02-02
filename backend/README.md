@@ -9,3 +9,6 @@ Planned stack: FastAPI.
 
 ## Persistence
 Set `SERVICE_STORE_PATH` to enable JSON persistence for services/events.
+
+## Events Persistence (Optional)
+Set `SERVICE_EVENTS_PATH` to persist service events separately to JSON.

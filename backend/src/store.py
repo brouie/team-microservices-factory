@@ -21,11 +21,20 @@ class ServiceStore:
         self._api_keys: dict[str, str] = {}
         self._events: dict[str, list[ServiceEvent]] = {}
         self._data_path = self._resolve_data_path()
+        self._events_path = self._resolve_events_path()
         if self._data_path:
             self._load_from_disk()
+        if self._events_path:
+            self._load_events()
 
     def _resolve_data_path(self) -> Path | None:
         path = os.getenv("SERVICE_STORE_PATH")
+        if not path:
+            return None
+        return Path(path)
+
+    def _resolve_events_path(self) -> Path | None:
+        path = os.getenv("SERVICE_EVENTS_PATH")
         if not path:
             return None
         return Path(path)
@@ -44,6 +53,13 @@ class ServiceStore:
         }
         self._api_keys = data.get("api_keys", {})
 
+    def _load_events(self) -> None:
+        if not self._events_path or not self._events_path.exists():
+            return
+        data = json.loads(self._events_path.read_text(encoding="utf-8"))
+        for service_id, events in data.items():
+            self._events[service_id] = [ServiceEvent(**event) for event in events]
+
     def _persist_to_disk(self) -> None:
         if not self._data_path:
             return
@@ -60,6 +76,18 @@ class ServiceStore:
             "api_keys": self._api_keys,
         }
         self._data_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
+        )
+
+    def _persist_events(self) -> None:
+        if not self._events_path:
+            return
+        self._events_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            service_id: [event.model_dump(mode="json") for event in events]
+            for service_id, events in self._events.items()
+        }
+        self._events_path.write_text(
             json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
         )
 
@@ -82,6 +110,7 @@ class ServiceStore:
             ServiceEvent(service_id=service_id, status=ServiceStatus.QUEUED)
         ]
         self._persist_to_disk()
+        self._persist_events()
         return record
 
     def list_services(self) -> list[ServiceRecord]:
@@ -100,6 +129,7 @@ class ServiceStore:
             ServiceEvent(service_id=service_id, status=status, message=message)
         )
         self._persist_to_disk()
+        self._persist_events()
         return record
 
     def list_events(self, service_id: str) -> list[ServiceEvent]:
