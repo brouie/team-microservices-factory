@@ -6,7 +6,9 @@ import {
   createAccess,
   createToken,
   deployService,
+  fetchServiceEvents,
   fetchServices,
+  ServiceEvent,
   ServiceRecord,
   submitIdea
 } from "../lib/api";
@@ -17,6 +19,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [accessInfo, setAccessInfo] = useState<string | null>(null);
+  const [eventsByService, setEventsByService] = useState<
+    Record<string, ServiceEvent[]>
+  >({});
 
   const loadServices = async () => {
     const data = await fetchServices();
@@ -97,6 +102,19 @@ export default function Home() {
     }
   };
 
+  const handleLoadEvents = async (serviceId: string) => {
+    setLoading(true);
+    setMessage("");
+    try {
+      const events = await fetchServiceEvents(serviceId);
+      setEventsByService((current) => ({ ...current, [serviceId]: events }));
+    } catch (error) {
+      setMessage((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDate = (value: string) =>
     new Date(value).toLocaleString(undefined, {
       dateStyle: "medium",
@@ -139,6 +157,7 @@ export default function Home() {
               {(() => {
                 const hasToken = Boolean(service.token_address);
                 const hasApi = Boolean(service.api_base_url);
+                const events = eventsByService[service.id];
                 return (
                   <>
                     <p>{service.idea}</p>
@@ -177,6 +196,25 @@ export default function Home() {
                     >
                       Get Access
                     </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleLoadEvents(service.id)}
+                    >
+                      Load Events
+                    </button>
+                    {events ? (
+                      <ul className="event-list">
+                        {events.map((event, index) => (
+                          <li key={`${event.created_at}-${index}`}>
+                            <span className="muted">
+                              {formatDate(event.created_at)} — {event.status}
+                            </span>
+                            {event.message ? `: ${event.message}` : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </>
                 );
               })()}
