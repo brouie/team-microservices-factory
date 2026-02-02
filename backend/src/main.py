@@ -3,6 +3,7 @@ import secrets
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from .analytics import load_events_from_path
 from .models import (
     AccessResponse,
     IdeaSubmission,
@@ -61,6 +62,30 @@ def list_service_events(service_id: str) -> list[ServiceEvent]:
     if record is None:
         raise HTTPException(status_code=404, detail="Service not found")
     return store.list_events(service_id)
+
+
+@app.get("/services/{service_id}/events/summary")
+def get_event_summary(service_id: str) -> dict[str, object]:
+    record = store.get_service(service_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Service not found")
+
+    events = store.list_events(service_id)
+    if not events:
+        persisted = load_events_from_path()
+        events = persisted.get(service_id, [])
+
+    counts: dict[str, int] = {}
+    for event in events:
+        counts[event.status.value] = counts.get(event.status.value, 0) + 1
+
+    last_event = events[-1].model_dump(mode="json") if events else None
+    return {
+        "service_id": service_id,
+        "total_events": len(events),
+        "counts": counts,
+        "last_event": last_event,
+    }
 
 
 @app.post("/services/{service_id}/deploy", response_model=ServiceRecord)
