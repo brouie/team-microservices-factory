@@ -26,6 +26,18 @@ export default function Home() {
     loadServices().catch((error) => setMessage(error.message));
   }, []);
 
+  const handleRefresh = async () => {
+    setLoading(true);
+    setMessage("");
+    try {
+      await loadServices();
+    } catch (error) {
+      setMessage((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     setMessage("");
@@ -105,40 +117,51 @@ export default function Home() {
 
       <section className="panel">
         <h2>Services</h2>
+        <button type="button" disabled={loading} onClick={handleRefresh}>
+          Refresh
+        </button>
         {services.length === 0 ? (
           <p className="muted">No services yet.</p>
         ) : (
           services.map((service) => (
             <div className="service-card" key={service.id}>
-              <p>{service.idea}</p>
-              <p className="muted">Status: {service.status}</p>
-              <p className="muted">
-                Token: {service.token_address ?? "Not created"}
-              </p>
-              <p className="muted">
-                API: {service.api_base_url ?? "Not deployed"}
-              </p>
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleDeploy(service.id)}
-              >
-                Deploy
-              </button>
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleToken(service.id)}
-              >
-                Create Token
-              </button>
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleAccess(service.id)}
-              >
-                Get Access
-              </button>
+              {(() => {
+                const hasToken = Boolean(service.token_address);
+                const hasApi = Boolean(service.api_base_url);
+                return (
+                  <>
+                    <p>{service.idea}</p>
+                    <p className="muted">Status: {service.status}</p>
+                    <p className="muted">
+                      Token: {service.token_address ?? "Not created"}
+                    </p>
+                    <p className="muted">
+                      API: {service.api_base_url ?? "Not deployed"}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleDeploy(service.id)}
+                    >
+                      Deploy
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading || !hasApi}
+                      onClick={() => handleToken(service.id)}
+                    >
+                      Create Token
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading || !hasApi || !hasToken}
+                      onClick={() => handleAccess(service.id)}
+                    >
+                      Get Access
+                    </button>
+                  </>
+                );
+              })()}
             </div>
           ))
         )}
