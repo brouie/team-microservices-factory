@@ -2,6 +2,18 @@
 
 Base URL: `/`
 
+## Auth
+- `Authorization: Bearer <user_token>` for protected routes (MVP can be optional).
+- `X-Api-Key: <api_key>` for gateway access to service APIs.
+
+## Error Response
+```
+{
+  "error": "string",
+  "detail": "string"
+}
+```
+
 ## Health
 - `GET /health`
   - Response: `{ "status": "ok" }`
@@ -49,3 +61,9 @@ Base URL: `/`
   "updated_at": "string (ISO-8601)"
 }
 ```
+
+### Status Codes
+- `200` success
+- `400` bad request or invalid state
+- `404` service not found
+- `500` server error

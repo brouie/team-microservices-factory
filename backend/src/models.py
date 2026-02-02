@@ -32,3 +32,9 @@ class ServiceRecord(BaseModel):
     api_base_url: str | None = None
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
+
+
+class AccessResponse(BaseModel):
+    api_key: str
+    api_base_url: str
+    token_address: str
