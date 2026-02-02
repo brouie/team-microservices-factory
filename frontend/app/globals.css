@@ -69,6 +69,14 @@ button:disabled {
   background: #101521;
 }
 
+.code-block {
+  background: #0f131c;
+  border: 1px solid #2a2f3a;
+  border-radius: 8px;
+  padding: 12px;
+  white-space: pre-wrap;
+}
+
 .muted {
   color: #a0a7b5;
   font-size: 14px;
