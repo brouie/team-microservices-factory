@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
+import os
 import secrets
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from .models import ServiceEvent, ServiceRecord, ServiceStatus
@@ -17,6 +20,36 @@ class ServiceStore:
         self._services: dict[str, ServiceRecord] = {}
         self._api_keys: dict[str, str] = {}
         self._events: dict[str, list[ServiceEvent]] = {}
+        self._events_path = self._resolve_events_path()
+        if self._events_path:
+            self._load_events()
+
+    def _resolve_events_path(self) -> Path | None:
+        path = os.getenv("SERVICE_EVENTS_PATH")
+        if not path:
+            return None
+        return Path(path)
+
+    def _load_events(self) -> None:
+        if not self._events_path or not self._events_path.exists():
+            return
+        data = json.loads(self._events_path.read_text(encoding="utf-8"))
+        self._events = {
+            service_id: [ServiceEvent(**event) for event in events]
+            for service_id, events in data.items()
+        }
+
+    def _persist_events(self) -> None:
+        if not self._events_path:
+            return
+        self._events_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            service_id: [event.model_dump(mode="json") for event in events]
+            for service_id, events in self._events.items()
+        }
+        self._events_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
+        )
 
     def create_service(
         self,
@@ -36,6 +69,7 @@ class ServiceStore:
         self._events[service_id] = [
             ServiceEvent(service_id=service_id, status=ServiceStatus.QUEUED)
         ]
+        self._persist_events()
         return record
 
     def list_services(self) -> list[ServiceRecord]:
@@ -53,6 +87,7 @@ class ServiceStore:
         self._events[service_id].append(
             ServiceEvent(service_id=service_id, status=status, message=message)
         )
+        self._persist_events()
         return record
 
     def list_events(self, service_id: str) -> list[ServiceEvent]:
