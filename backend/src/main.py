@@ -3,7 +3,13 @@ import secrets
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from .models import AccessResponse, IdeaSubmission, ServiceRecord, ServiceStatus
+from .models import (
+    AccessResponse,
+    IdeaSubmission,
+    ServiceEvent,
+    ServiceRecord,
+    ServiceStatus,
+)
 from .store import ServiceStore
 
 app = FastAPI(title="Microservice Factory API")
@@ -49,14 +55,22 @@ def get_service(service_id: str) -> ServiceRecord:
     return record
 
 
+@app.get("/services/{service_id}/events", response_model=list[ServiceEvent])
+def list_service_events(service_id: str) -> list[ServiceEvent]:
+    record = store.get_service(service_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return store.list_events(service_id)
+
+
 @app.post("/services/{service_id}/deploy", response_model=ServiceRecord)
 def deploy_service(service_id: str) -> ServiceRecord:
     record = store.get_service(service_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Service not found")
 
-    store.update_status(service_id, ServiceStatus.DEPLOYING)
-    store.update_status(service_id, ServiceStatus.DEPLOYED)
+    store.update_status(service_id, ServiceStatus.DEPLOYING, "Deployment started")
+    store.update_status(service_id, ServiceStatus.DEPLOYED, "Deployment finished")
     return store.set_api_base_url(service_id, f"https://api.example.com/{service_id}")
 
 
@@ -67,7 +81,9 @@ def create_token(service_id: str) -> ServiceRecord:
         raise HTTPException(status_code=404, detail="Service not found")
 
     token_address = f"0x{secrets.token_hex(20)}"
-    return store.set_token_address(service_id, token_address)
+    record = store.set_token_address(service_id, token_address)
+    store.update_status(service_id, record.status, "Token created")
+    return record
 
 
 @app.post("/services/{service_id}/access", response_model=AccessResponse)
