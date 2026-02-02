@@ -9,6 +9,7 @@ Planned stack: Solidity + Foundry.
 ## Mint Club V2
 - Config: `contracts/src/MintClubConfig.sol`
 - Script skeleton: `contracts/script/CreateToken.s.sol`
+- Token-gating interface: `contracts/src/IAccessToken.sol`
 
 ## Foundry (local)
 1. Install Foundry: `https://book.getfoundry.sh/getting-started/installation`
