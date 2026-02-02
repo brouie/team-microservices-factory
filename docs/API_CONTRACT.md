@@ -47,6 +47,32 @@ Base URL: `/`
     - `api_base_url` (string)
     - `token_address` (string)
 
+## Events
+- `GET /services/{service_id}/events`
+  - Response: `ServiceEvent[]`
+- `GET /services/{service_id}/events/summary`
+  - Response:
+    - `service_id` (string)
+    - `total_events` (number)
+    - `counts` (object)
+    - `last_event` (ServiceEvent|null)
+
+## Stats
+- `GET /stats`
+  - Response:
+    - `total_services` (number)
+    - `status_counts` (object)
+    - `deployed_count` (number)
+    - `tokenized_count` (number)
+- `GET /services/{service_id}/status`
+  - Response:
+    - `service_id` (string)
+    - `status` (string)
+    - `is_deployed` (boolean)
+    - `is_tokenized` (boolean)
+    - `event_count` (number)
+    - `last_updated` (string)
+
 ---
 
 ### ServiceRecord
@@ -61,6 +87,16 @@ Base URL: `/`
   "api_base_url": "string|null",
   "created_at": "string (ISO-8601)",
   "updated_at": "string (ISO-8601)"
+}
+```
+
+### ServiceEvent
+```
+{
+  "service_id": "string",
+  "status": "queued|deploying|deployed|failed",
+  "message": "string|null",
+  "created_at": "string (ISO-8601)"
 }
 ```
 

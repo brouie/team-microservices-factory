@@ -127,3 +127,40 @@ def create_access(service_id: str) -> AccessResponse:
         api_base_url=record.api_base_url,
         token_address=record.token_address,
     )
+
+
+@app.get("/stats")
+def get_stats() -> dict[str, object]:
+    """Get aggregate statistics about services in the system."""
+    services = store.list_services()
+    status_counts: dict[str, int] = {}
+    for service in services:
+        status_counts[service.status.value] = status_counts.get(service.status.value, 0) + 1
+
+    deployed_count = sum(1 for s in services if s.api_base_url)
+    tokenized_count = sum(1 for s in services if s.token_address)
+
+    return {
+        "total_services": len(services),
+        "status_counts": status_counts,
+        "deployed_count": deployed_count,
+        "tokenized_count": tokenized_count,
+    }
+
+
+@app.get("/services/{service_id}/status")
+def get_service_status(service_id: str) -> dict[str, object]:
+    """Get detailed status information for a service."""
+    record = store.get_service(service_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Service not found")
+
+    events = store.list_events(service_id)
+    return {
+        "service_id": service_id,
+        "status": record.status.value,
+        "is_deployed": record.api_base_url is not None,
+        "is_tokenized": record.token_address is not None,
+        "event_count": len(events),
+        "last_updated": record.updated_at.isoformat(),
+    }
