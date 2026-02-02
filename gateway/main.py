@@ -4,6 +4,9 @@ import httpx
 from fastapi import FastAPI, HTTPException, Request, Response
 
 BACKEND_BASE = os.getenv("BACKEND_BASE", "http://localhost:8000")
+RPC_URL = os.getenv("RPC_URL")
+TOKEN_ADDRESS = os.getenv("TOKEN_ADDRESS")
+WALLET_HEADER = os.getenv("WALLET_HEADER", "X-Wallet-Address")
 
 app = FastAPI(title="Microservices Gateway")
 
@@ -13,21 +16,41 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-def has_token_access(request: Request) -> bool:
+async def get_token_balance(wallet_address: str) -> int:
+    if not RPC_URL or not TOKEN_ADDRESS:
+        return 0
+    data = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "eth_call",
+        "params": [
+            {
+                "to": TOKEN_ADDRESS,
+                "data": f"0x70a08231{wallet_address[2:].rjust(64, '0')}",
+            },
+            "latest",
+        ],
+    }
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(RPC_URL, json=data, timeout=10)
+        resp.raise_for_status()
+        result = resp.json().get("result", "0x0")
+        return int(result, 16)
+
+
+async def has_token_access(request: Request) -> bool:
     if request.headers.get("X-Dev-Bypass") == "1":
         return True
-    balance = request.headers.get("X-Token-Balance")
-    if balance is None:
+    wallet = request.headers.get(WALLET_HEADER)
+    if not wallet or not wallet.startswith("0x") or len(wallet) != 42:
         return False
-    try:
-        return float(balance) > 0
-    except ValueError:
-        return False
+    balance = await get_token_balance(wallet)
+    return balance > 0
 
 
 @app.api_route("/proxy/{service_id}/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 async def proxy_request(service_id: str, path: str, request: Request) -> Response:
-    if not has_token_access(request):
+    if not await has_token_access(request):
         raise HTTPException(status_code=403, detail="Token access required")
 
     async with httpx.AsyncClient() as client:
