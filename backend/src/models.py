@@ -13,6 +13,8 @@ def utc_now() -> datetime:
 
 class ServiceStatus(str, Enum):
     QUEUED = "queued"
+    GENERATING = "generating"
+    GENERATED = "generated"
     DEPLOYING = "deploying"
     DEPLOYED = "deployed"
     FAILED = "failed"

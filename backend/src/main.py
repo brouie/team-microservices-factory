@@ -88,6 +88,26 @@ def get_event_summary(service_id: str) -> dict[str, object]:
     }
 
 
+@app.post("/services/{service_id}/generate", response_model=ServiceRecord)
+def generate_service_code(service_id: str) -> ServiceRecord:
+    """Generate microservice code from the user's idea."""
+    from .generator import ServiceGenerator
+    
+    record = store.get_service(service_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    store.update_status(service_id, ServiceStatus.GENERATING, "Generating service code")
+    
+    generator = ServiceGenerator()
+    generated = generator.generate(record.idea, service_id)
+    
+    # Store generated files (in a real system, commit to GitHub)
+    store.update_status(service_id, ServiceStatus.GENERATED, f"Code generated: {len(generated.code)} chars")
+    
+    return record
+
+
 @app.post("/services/{service_id}/deploy", response_model=ServiceRecord)
 def deploy_service(service_id: str) -> ServiceRecord:
     record = store.get_service(service_id)
@@ -95,8 +115,12 @@ def deploy_service(service_id: str) -> ServiceRecord:
         raise HTTPException(status_code=404, detail="Service not found")
 
     store.update_status(service_id, ServiceStatus.DEPLOYING, "Deployment started")
-    store.update_status(service_id, ServiceStatus.DEPLOYED, "Deployment finished")
-    return store.set_api_base_url(service_id, f"https://api.example.com/{service_id}")
+    
+    # TODO: Actually deploy to Vercel/Railway
+    # For now, simulate deployment
+    api_url = f"https://{service_id}.vercel.app"
+    store.update_status(service_id, ServiceStatus.DEPLOYED, f"Deployed to {api_url}")
+    return store.set_api_base_url(service_id, api_url)
 
 
 @app.post("/services/{service_id}/token", response_model=ServiceRecord)
