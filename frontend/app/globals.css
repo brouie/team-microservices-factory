@@ -1,0 +1,75 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0c0f14;
+  color: #e6e6e6;
+}
+
+.header {
+  padding: 24px 32px 12px 32px;
+  border-bottom: 1px solid #2a2f3a;
+}
+
+.container {
+  padding: 24px 32px;
+  max-width: 960px;
+}
+
+.panel {
+  background: #141822;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #2a2f3a;
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+input,
+textarea,
+button {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #3a3f4a;
+  background: #0f131c;
+  color: #e6e6e6;
+}
+
+button {
+  background: #2d6cdf;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.service-card {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #2a2f3a;
+  background: #101521;
+}
+
+.muted {
+  color: #a0a7b5;
+  font-size: 14px;
+}
