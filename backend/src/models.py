@@ -27,6 +27,8 @@ class IdeaSubmission(BaseModel):
 class ServiceRecord(BaseModel):
     id: str
     idea: str
+    requester_id: str | None = None
+    metadata: dict[str, Any] | None = None
     status: ServiceStatus
     token_address: str | None = None
     api_base_url: str | None = None

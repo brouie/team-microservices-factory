@@ -3,6 +3,7 @@ from __future__ import annotations
 import secrets
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 
 from .models import ServiceRecord, ServiceStatus
 
@@ -16,11 +17,18 @@ class ServiceStore:
         self._services: dict[str, ServiceRecord] = {}
         self._api_keys: dict[str, str] = {}
 
-    def create_service(self, idea: str) -> ServiceRecord:
+    def create_service(
+        self,
+        idea: str,
+        requester_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> ServiceRecord:
         service_id = uuid.uuid4().hex
         record = ServiceRecord(
             id=service_id,
             idea=idea,
+            requester_id=requester_id,
+            metadata=metadata,
             status=ServiceStatus.QUEUED,
         )
         self._services[service_id] = record
