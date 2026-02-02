@@ -8,6 +8,13 @@ export type ServiceRecord = {
   updated_at: string;
 };
 
+export type ServiceEvent = {
+  service_id: string;
+  status: string;
+  message: string | null;
+  created_at: string;
+};
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
 export async function submitIdea(idea: string): Promise<ServiceRecord> {
@@ -60,6 +67,16 @@ export async function createAccess(serviceId: string): Promise<{
   });
   if (!response.ok) {
     throw new Error("Failed to create access");
+  }
+  return response.json();
+}
+
+export async function fetchServiceEvents(
+  serviceId: string
+): Promise<ServiceEvent[]> {
+  const response = await fetch(`${API_BASE}/services/${serviceId}/events`);
+  if (!response.ok) {
+    throw new Error("Failed to load service events");
   }
   return response.json();
 }

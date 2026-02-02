@@ -81,3 +81,12 @@ button:disabled {
   color: #a0a7b5;
   font-size: 14px;
 }
+
+.event-list {
+  margin-top: 12px;
+  padding-left: 18px;
+}
+
+.event-list li {
+  margin-bottom: 6px;
+}
