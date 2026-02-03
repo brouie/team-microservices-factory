@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: msf-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SERVICE_STORE_PATH
+        value: /tmp/store.json
+      - key: SERVICE_EVENTS_PATH
+        value: /tmp/events.json
+
+  - type: web
+    name: msf-gateway
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: gateway
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: BACKEND_BASE
+        fromService:
+          name: msf-backend
+          type: web
+          property: host
+      - key: RPC_URL
+        sync: false
+      - key: TOKEN_ADDRESS
+        sync: false
