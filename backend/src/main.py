@@ -88,15 +88,59 @@ def get_event_summary(service_id: str) -> dict[str, object]:
     }
 
 
+@app.post("/services/{service_id}/generate", response_model=ServiceRecord)
+def generate_service_code(service_id: str) -> ServiceRecord:
+    """Generate microservice code from the user's idea."""
+    from .generator import ServiceGenerator
+    
+    record = store.get_service(service_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    store.update_status(service_id, ServiceStatus.GENERATING, "Generating service code")
+    
+    generator = ServiceGenerator()
+    generated = generator.generate(record.idea, service_id)
+    
+    # Store generated files (in a real system, commit to GitHub)
+    store.update_status(service_id, ServiceStatus.GENERATED, f"Code generated: {len(generated.code)} chars")
+    
+    return record
+
+
 @app.post("/services/{service_id}/deploy", response_model=ServiceRecord)
 def deploy_service(service_id: str) -> ServiceRecord:
+    from .deployer import ServiceDeployer
+    from .generator import ServiceGenerator
+    
     record = store.get_service(service_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Service not found")
 
     store.update_status(service_id, ServiceStatus.DEPLOYING, "Deployment started")
-    store.update_status(service_id, ServiceStatus.DEPLOYED, "Deployment finished")
-    return store.set_api_base_url(service_id, f"https://api.example.com/{service_id}")
+    
+    # Generate service files
+    generator = ServiceGenerator()
+    generated = generator.generate(record.idea, service_id)
+    
+    # Prepare files for deployment
+    code_files = {
+        "main.py": generated.code,
+        "requirements.txt": "\n".join(generated.dependencies),
+        "README.md": generated.readme,
+        "Dockerfile": generated.dockerfile
+    }
+    
+    # Deploy to Vercel
+    deployer = ServiceDeployer()
+    result = deployer.deploy_to_vercel(service_id, code_files)
+    
+    if result.success:
+        store.update_status(service_id, ServiceStatus.DEPLOYED, f"Deployed to {result.url}")
+        return store.set_api_base_url(service_id, result.url)
+    else:
+        store.update_status(service_id, ServiceStatus.FAILED, f"Deployment failed: {result.error}")
+        raise HTTPException(status_code=500, detail=f"Deployment failed: {result.error}")
 
 
 @app.post("/services/{service_id}/token", response_model=ServiceRecord)
