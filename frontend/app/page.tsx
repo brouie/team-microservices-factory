@@ -119,7 +119,7 @@ export default function Home() {
     try {
       const access = await createAccess(serviceId);
       setAccessInfo(
-        `API base: ${access.api_base_url}\nToken: ${access.token_address}\nAPI key: ${access.api_key}`
+        `API: ${access.api_base_url}\nToken: ${access.token_address}\nKey: ${access.api_key}`
       );
     } catch (error) {
       setMessage((error as Error).message);
@@ -143,9 +143,11 @@ export default function Home() {
 
   const formatDate = (value: string) =>
     new Date(value).toLocaleString(undefined, {
-      dateStyle: "medium",
+      dateStyle: "short",
       timeStyle: "short"
     });
+
+  const truncateId = (id: string) => `${id.slice(0, 8)}...`;
 
   const isValidWallet = walletAddress.startsWith("0x") && walletAddress.length === 42;
 
@@ -153,19 +155,23 @@ export default function Home() {
     <div className="grid">
       {apiStatus && !apiStatus.connected && (
         <section className="panel api-status-banner">
-          <p className="error">Backend API unavailable at {apiStatus.url}</p>
-          <p className="muted">Deploy the backend or configure NEXT_PUBLIC_API_BASE</p>
-          <button type="button" onClick={() => checkApi()}>Retry Connection</button>
+          <p className="error">Backend unavailable</p>
+          <p className="muted">Cannot reach {apiStatus.url}</p>
+          <button type="button" onClick={() => checkApi()}>
+            Retry
+          </button>
         </section>
       )}
+
       {apiStatus?.connected && (
         <section className="panel api-status-connected">
-          <p className="success">Connected to backend API</p>
+          <p className="success">Connected to API</p>
         </section>
       )}
+
       <section className="panel">
-        <h2>Wallet Connection</h2>
-        <label htmlFor="wallet">Your Wallet Address</label>
+        <h2>Wallet</h2>
+        <label htmlFor="wallet">Ethereum Address</label>
         <input
           id="wallet"
           type="text"
@@ -175,31 +181,31 @@ export default function Home() {
           className={isValidWallet ? "valid" : ""}
         />
         {walletAddress && !isValidWallet && (
-          <p className="muted error">Enter a valid Ethereum address (0x...)</p>
+          <p className="muted error">Invalid address format</p>
         )}
         {isValidWallet && (
-          <p className="muted success">Wallet connected</p>
+          <p className="muted success">Connected</p>
         )}
       </section>
 
       <section className="panel">
-        <h2>Submit Idea</h2>
-        <label htmlFor="idea">Describe the microservice</label>
+        <h2>New Service</h2>
+        <label htmlFor="idea">Describe your microservice</label>
         <textarea
           id="idea"
-          rows={6}
+          rows={4}
           value={idea}
           onChange={(event) => setIdea(event.target.value)}
-          placeholder="Example: Summarize meeting notes and return action items."
+          placeholder="A service that summarizes meeting notes..."
         />
         <button
           type="button"
           disabled={!idea.trim() || loading}
           onClick={handleSubmit}
         >
-          Submit
+          {loading ? "Submitting..." : "Submit Idea"}
         </button>
-        {message ? <p className="muted">{message}</p> : null}
+        {message && <p className="muted error">{message}</p>}
       </section>
 
       {stats && (
@@ -208,7 +214,7 @@ export default function Home() {
           <div className="stats-grid">
             <div className="stat-item">
               <span className="stat-value">{stats.total_services}</span>
-              <span className="stat-label">Total Services</span>
+              <span className="stat-label">Total</span>
             </div>
             <div className="stat-item">
               <span className="stat-value">{stats.deployed_count}</span>
@@ -226,85 +232,92 @@ export default function Home() {
         </section>
       )}
 
-      <section className="panel">
+      <section className="panel" style={{ gridColumn: "span 2" }}>
         <h2>Services</h2>
-        <button type="button" disabled={loading} onClick={handleRefresh}>
-          Refresh
+        <button
+          type="button"
+          disabled={loading}
+          onClick={handleRefresh}
+          style={{ marginBottom: "var(--space-md)" }}
+        >
+          {loading ? "Loading..." : "Refresh"}
         </button>
-        {accessInfo ? <pre className="code-block">{accessInfo}</pre> : null}
+
+        {accessInfo && <pre className="code-block">{accessInfo}</pre>}
+
         {services.length === 0 ? (
-          <p className="muted">No services yet.</p>
+          <p className="muted">No services yet. Submit an idea to get started.</p>
         ) : (
-          services.map((service) => (
-            <div className="service-card" key={service.id}>
-              {(() => {
-                const hasToken = Boolean(service.token_address);
-                const hasApi = Boolean(service.api_base_url);
-                const events = eventsByService[service.id];
-                return (
-                  <>
-                    <p>{service.idea}</p>
-                    <p className="muted">Service ID: {service.id}</p>
-                    <p className="muted">
-                      Created: {formatDate(service.created_at)}
-                    </p>
-                    <p className="muted">
-                      Updated: {formatDate(service.updated_at)}
-                    </p>
-                    <p className="muted">Status: {service.status}</p>
-                    <p className="muted">
-                      Token: {service.token_address ?? "Not created"}
-                    </p>
-                    <p className="muted">
-                      API: {service.api_base_url ?? "Not deployed"}
-                    </p>
-                    <div className="button-group">
-                      <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => handleDeploy(service.id)}
-                      >
-                        Deploy
-                      </button>
-                      <button
-                        type="button"
-                        disabled={loading || !hasApi}
-                        onClick={() => handleToken(service.id)}
-                      >
-                        Create Token
-                      </button>
-                      <button
-                        type="button"
-                        disabled={loading || !hasApi || !hasToken}
-                        onClick={() => handleAccess(service.id)}
-                      >
-                        Get Access
-                      </button>
-                      <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => handleLoadEvents(service.id)}
-                      >
-                        Load Events
-                      </button>
-                    </div>
-                    {events ? (
-                      <ul className="event-list">
-                        {events.map((event, index) => (
-                          <li key={`${event.created_at}-${index}`}>
-                            <span className="muted">
-                              {formatDate(event.created_at)} — {event.status}
-                            </span>
-                            {event.message ? `: ${event.message}` : null}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </>
-                );
-              })()}
-            </div>
-          ))
+          services.map((service) => {
+            const hasToken = Boolean(service.token_address);
+            const hasApi = Boolean(service.api_base_url);
+            const events = eventsByService[service.id];
+
+            return (
+              <div className="service-card" key={service.id}>
+                <p>{service.idea}</p>
+                <p className="muted">
+                  ID: {truncateId(service.id)} | Status: <strong>{service.status}</strong>
+                </p>
+                <p className="muted">
+                  Created: {formatDate(service.created_at)} | Updated: {formatDate(service.updated_at)}
+                </p>
+                {service.token_address && (
+                  <p className="muted">Token: {truncateId(service.token_address)}</p>
+                )}
+                {service.api_base_url && (
+                  <p className="muted">API: {service.api_base_url}</p>
+                )}
+
+                <div className="button-group">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => handleDeploy(service.id)}
+                  >
+                    Deploy
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading || !hasApi}
+                    onClick={() => handleToken(service.id)}
+                  >
+                    Create Token
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading || !hasApi || !hasToken}
+                    onClick={() => handleAccess(service.id)}
+                  >
+                    Get Access
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => handleLoadEvents(service.id)}
+                  >
+                    Events
+                  </button>
+                </div>
+
+                {events && events.length > 0 && (
+                  <ul className="event-list">
+                    {events.slice(0, 5).map((event, index) => (
+                      <li key={`${event.created_at}-${index}`}>
+                        <span className="muted">
+                          {formatDate(event.created_at)} - {event.status}
+                        </span>
+                        {event.message && <span>: {event.message}</span>}
+                      </li>
+                    ))}
+                    {events.length > 5 && (
+                      <li className="muted">+ {events.length - 5} more events</li>
+                    )}
+                  </ul>
+                )}
+              </div>
+            );
+          })
         )}
       </section>
     </div>
