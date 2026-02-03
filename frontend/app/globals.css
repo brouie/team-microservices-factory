@@ -42,6 +42,17 @@ button {
   border: 1px solid #3a3f4a;
   background: #0f131c;
   color: #e6e6e6;
+  margin-bottom: 8px;
+}
+
+input.valid {
+  border-color: #2dd36f;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2d6cdf;
 }
 
 button {
@@ -49,6 +60,11 @@ button {
   border: none;
   cursor: pointer;
   font-weight: 600;
+  margin-bottom: 0;
+}
+
+button:hover:not(:disabled) {
+  background: #3d7cef;
 }
 
 button:disabled {
@@ -67,6 +83,7 @@ button:disabled {
   border-radius: 8px;
   border: 1px solid #2a2f3a;
   background: #101521;
+  margin-bottom: 12px;
 }
 
 .code-block {
@@ -75,11 +92,21 @@ button:disabled {
   border-radius: 8px;
   padding: 12px;
   white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 13px;
 }
 
 .muted {
   color: #a0a7b5;
   font-size: 14px;
+}
+
+.muted.error {
+  color: #eb445a;
+}
+
+.muted.success {
+  color: #2dd36f;
 }
 
 .event-list {
@@ -89,4 +116,65 @@ button:disabled {
 
 .event-list li {
   margin-bottom: 6px;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.button-group button {
+  width: auto;
+  flex: 1;
+  min-width: 100px;
+}
+
+.stats-panel {
+  grid-column: span 2;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.stat-item {
+  background: #0f131c;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #2a2f3a;
+}
+
+.stat-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2d6cdf;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  color: #a0a7b5;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-panel {
+    grid-column: span 1;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
