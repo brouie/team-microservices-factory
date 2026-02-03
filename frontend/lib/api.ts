@@ -17,8 +17,35 @@ export type ServiceEvent = {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
+export async function checkApiStatus(): Promise<{ connected: boolean; url: string }> {
+  try {
+    const response = await fetch(`${API_BASE}/health`, { 
+      method: "GET",
+      signal: AbortSignal.timeout(5000)
+    });
+    return { connected: response.ok, url: API_BASE };
+  } catch {
+    return { connected: false, url: API_BASE };
+  }
+}
+
+async function handleFetch(url: string, options?: RequestInit): Promise<Response> {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: AbortSignal.timeout(10000)
+    });
+    return response;
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new Error("Request timed out. Backend may be unavailable.");
+    }
+    throw new Error("Network error. Backend may be unavailable.");
+  }
+}
+
 export async function submitIdea(idea: string): Promise<ServiceRecord> {
-  const response = await fetch(`${API_BASE}/ideas`, {
+  const response = await handleFetch(`${API_BASE}/ideas`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idea })
@@ -30,7 +57,7 @@ export async function submitIdea(idea: string): Promise<ServiceRecord> {
 }
 
 export async function fetchServices(): Promise<ServiceRecord[]> {
-  const response = await fetch(`${API_BASE}/services`);
+  const response = await handleFetch(`${API_BASE}/services`);
   if (!response.ok) {
     throw new Error("Failed to load services");
   }
@@ -38,7 +65,7 @@ export async function fetchServices(): Promise<ServiceRecord[]> {
 }
 
 export async function deployService(serviceId: string): Promise<ServiceRecord> {
-  const response = await fetch(`${API_BASE}/services/${serviceId}/deploy`, {
+  const response = await handleFetch(`${API_BASE}/services/${serviceId}/deploy`, {
     method: "POST"
   });
   if (!response.ok) {
@@ -48,7 +75,7 @@ export async function deployService(serviceId: string): Promise<ServiceRecord> {
 }
 
 export async function createToken(serviceId: string): Promise<ServiceRecord> {
-  const response = await fetch(`${API_BASE}/services/${serviceId}/token`, {
+  const response = await handleFetch(`${API_BASE}/services/${serviceId}/token`, {
     method: "POST"
   });
   if (!response.ok) {
@@ -62,7 +89,7 @@ export async function createAccess(serviceId: string): Promise<{
   api_base_url: string;
   token_address: string;
 }> {
-  const response = await fetch(`${API_BASE}/services/${serviceId}/access`, {
+  const response = await handleFetch(`${API_BASE}/services/${serviceId}/access`, {
     method: "POST"
   });
   if (!response.ok) {
@@ -74,7 +101,7 @@ export async function createAccess(serviceId: string): Promise<{
 export async function fetchServiceEvents(
   serviceId: string
 ): Promise<ServiceEvent[]> {
-  const response = await fetch(`${API_BASE}/services/${serviceId}/events`);
+  const response = await handleFetch(`${API_BASE}/services/${serviceId}/events`);
   if (!response.ok) {
     throw new Error("Failed to load service events");
   }
@@ -89,7 +116,7 @@ export type Stats = {
 };
 
 export async function fetchStats(): Promise<Stats> {
-  const response = await fetch(`${API_BASE}/stats`);
+  const response = await handleFetch(`${API_BASE}/stats`);
   if (!response.ok) {
     throw new Error("Failed to load stats");
   }

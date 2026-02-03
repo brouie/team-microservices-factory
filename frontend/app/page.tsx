@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import {
+  checkApiStatus,
   createAccess,
   createToken,
   deployService,
@@ -26,6 +27,13 @@ export default function Home() {
   const [eventsByService, setEventsByService] = useState<
     Record<string, ServiceEvent[]>
   >({});
+  const [apiStatus, setApiStatus] = useState<{ connected: boolean; url: string } | null>(null);
+
+  const checkApi = async () => {
+    const status = await checkApiStatus();
+    setApiStatus(status);
+    return status.connected;
+  };
 
   const loadServices = async () => {
     const data = await fetchServices();
@@ -38,8 +46,12 @@ export default function Home() {
   };
 
   useEffect(() => {
-    loadServices().catch((error) => setMessage(error.message));
-    loadStats().catch(() => {});
+    checkApi().then((connected) => {
+      if (connected) {
+        loadServices().catch((error) => setMessage(error.message));
+        loadStats().catch(() => {});
+      }
+    });
   }, []);
 
   const handleRefresh = async () => {
@@ -139,6 +151,18 @@ export default function Home() {
 
   return (
     <div className="grid">
+      {apiStatus && !apiStatus.connected && (
+        <section className="panel api-status-banner">
+          <p className="error">Backend API unavailable at {apiStatus.url}</p>
+          <p className="muted">Deploy the backend or configure NEXT_PUBLIC_API_BASE</p>
+          <button type="button" onClick={() => checkApi()}>Retry Connection</button>
+        </section>
+      )}
+      {apiStatus?.connected && (
+        <section className="panel api-status-connected">
+          <p className="success">Connected to backend API</p>
+        </section>
+      )}
       <section className="panel">
         <h2>Wallet Connection</h2>
         <label htmlFor="wallet">Your Wallet Address</label>
