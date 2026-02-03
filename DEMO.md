@@ -9,7 +9,7 @@ Complete walkthrough for demonstrating the Microservices Factory.
 Before the demo:
 - Backend running on `localhost:8000`
 - Frontend running on `localhost:3000`
-- OR use live demo: https://team-microservices-factory-gamma.vercel.app
+- OR use live demo: [team-microservices-factory-gamma.vercel.app](https://team-microservices-factory-gamma.vercel.app) (requires local backend)
 
 ---
 

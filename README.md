@@ -2,7 +2,7 @@
 
 > Submit an idea, deploy a microservice, mint a token, access the API.
 
-**Live Demo**: https://team-microservices-factory-gamma.vercel.app
+**Live Demo**: [team-microservices-factory-gamma.vercel.app](https://team-microservices-factory-gamma.vercel.app)
 
 ---
 
@@ -214,7 +214,9 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for full deployment instructions.
 4. Render auto-detects `render.yaml`
 
 **Frontend** is deployed on Vercel:
-- Production: https://team-microservices-factory-gamma.vercel.app
+- Production: [team-microservices-factory-gamma.vercel.app](https://team-microservices-factory-gamma.vercel.app)
+
+**Note**: The frontend demo requires a running backend. For full functionality, deploy the backend to Render or run locally.
 
 ---
 
@@ -259,7 +261,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for full deployment instructions.
 
 ## Links
 
-- [Live Demo](https://team-microservices-factory-gamma.vercel.app)
+- [Live Demo](https://team-microservices-factory-gamma.vercel.app) (requires local backend)
 - [API Docs](./docs/API_CONTRACT.md)
 - [Architecture](./docs/ARCHITECTURE.md)
 - [Deployment Guide](./DEPLOYMENT.md)
